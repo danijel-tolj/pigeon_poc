@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fpdart/fpdart.dart' hide State;
 import 'package:pigeon_poc/cubit/heart_rate/heart_rate_cubit.dart';
 import 'package:pigeon_poc/cubit/heart_rate_broadcast/heart_rate_broadcast_cubit.dart';
 import 'package:pigeon_poc/generated/pigeons.g.dart';
@@ -37,23 +35,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  late HealthDataHandler _handler;
-  @override
-  void initState() {
-    _handler = HealthDataHandler(hostApi: HealthDataHostApi());
-    super.initState();
-  }
-
-  Either<PlatformException, List<TimeSeriesData>>? result;
-
-  Future fetchHeartRate() async {
-    final response = await _handler.getHeartRate();
-
-    setState(() {
-      result = response;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return RepositoryProvider<HealthDataHandler>(
