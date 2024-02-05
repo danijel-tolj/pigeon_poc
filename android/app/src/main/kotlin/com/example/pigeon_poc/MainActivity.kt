@@ -20,7 +20,7 @@ class MainActivity: FlutterActivity() {
     }
 
     override fun onDestroy() {
-        _healthDataPlugin?.dispose()
+        _healthDataPlugin.dispose()
         super.onDestroy()
     }
 }

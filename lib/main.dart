@@ -58,15 +58,13 @@ class _MyHomePageState extends State<MyHomePage> {
               backgroundColor: Theme.of(context).colorScheme.inversePrimary,
               title: Text(widget.title),
             ),
-            body: const Center(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _FirmwareBroadcast(),
-                  _HeartRateBroadcast(),
-                  Expanded(child: _HeartRateData()),
-                ],
-              ),
+            body: const Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _HeartRateBroadcast(),
+                Expanded(child: _HeartRateData()),
+              ],
             ),
             floatingActionButton: FloatingActionButton(
               onPressed: () => context.read<HeartRateCubit>().fetch(),
@@ -80,48 +78,33 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class _FirmwareBroadcast extends StatelessWidget {
-  const _FirmwareBroadcast();
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder(
-        stream: context.read<HealthDataHandler>().firmwareStatusStream,
-        builder: (context, snapshot) {
-          final data = snapshot.data;
-
-          if (data == null) {
-            return const SizedBox();
-          } else {
-            return Text(
-              '${data.status.name} - ${data.value}',
-              textAlign: TextAlign.center,
-            );
-          }
-        });
-  }
-}
-
 class _HeartRateData extends StatelessWidget {
   const _HeartRateData();
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<HeartRateCubit, HeartRateState>(builder: (context, state) {
-      return switch (state) {
-        HeartRateInitial() => const SizedBox(),
-        HeartRateLoading() => const CircularProgressIndicator(),
-        HeartRateData() => ListView.builder(
-            itemBuilder: (context, index) {
-              return Text(
-                state.records[index].value.toString(),
-                textAlign: TextAlign.center,
-              );
-            },
-            itemCount: state.records.length,
-          ),
-        HeartRateError() => Text(state.error)
-      };
+      return Column(
+        children: [
+          const Text('Method call data: '),
+          switch (state) {
+            HeartRateInitial() => const SizedBox(),
+            HeartRateLoading() => const CircularProgressIndicator(),
+            HeartRateData() => Expanded(
+                child: ListView.builder(
+                  itemBuilder: (context, index) {
+                    return Text(
+                      state.records[index].value.toString(),
+                      textAlign: TextAlign.center,
+                    );
+                  },
+                  itemCount: state.records.length,
+                ),
+              ),
+            HeartRateError() => Text(state.error)
+          },
+        ],
+      );
     });
   }
 }
@@ -137,7 +120,7 @@ class _HeartRateBroadcast extends StatelessWidget {
           return const SizedBox();
         } else {
           return Text(
-            state.record.value.toString(),
+            'Broadcast HR data : ${state.record.value}',
             textAlign: TextAlign.center,
           );
         }

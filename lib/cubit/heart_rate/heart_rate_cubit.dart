@@ -1,5 +1,7 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pigeon_poc/handler/health_data_handler.dart';
+import 'package:pigeon_poc/model/time_series_entry.dart';
 
 part 'heart_rate_state.dart';
 

@@ -48,12 +48,6 @@ enum DeviceType: Int {
   case ouras = 1
 }
 
-enum FirmwareUpdateStatus: Int {
-  case updating = 0
-  case error = 1
-  case done = 2
-}
-
 /// Generated class from Pigeon that represents data sent in messages.
 struct TimeSeriesData {
   var timestamp: Int64
@@ -72,28 +66,6 @@ struct TimeSeriesData {
     return [
       timestamp,
       data,
-    ]
-  }
-}
-
-/// Generated class from Pigeon that represents data sent in messages.
-struct FirmwareStatusResponse {
-  var status: FirmwareUpdateStatus
-  var value: String
-
-  static func fromList(_ list: [Any?]) -> FirmwareStatusResponse? {
-    let status = FirmwareUpdateStatus(rawValue: list[0] as! Int)!
-    let value = list[1] as! String
-
-    return FirmwareStatusResponse(
-      status: status,
-      value: value
-    )
-  }
-  func toList() -> [Any?] {
-    return [
-      status.rawValue,
-      value,
     ]
   }
 }
@@ -169,8 +141,6 @@ private class HealthDataFlutterApiCodecReader: FlutterStandardReader {
   override func readValue(ofType type: UInt8) -> Any? {
     switch type {
     case 128:
-      return FirmwareStatusResponse.fromList(self.readValue() as! [Any?])
-    case 129:
       return TimeSeriesData.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
@@ -180,11 +150,8 @@ private class HealthDataFlutterApiCodecReader: FlutterStandardReader {
 
 private class HealthDataFlutterApiCodecWriter: FlutterStandardWriter {
   override func writeValue(_ value: Any) {
-    if let value = value as? FirmwareStatusResponse {
+    if let value = value as? TimeSeriesData {
       super.writeByte(128)
-      super.writeValue(value.toList())
-    } else if let value = value as? TimeSeriesData {
-      super.writeByte(129)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)
@@ -209,8 +176,6 @@ class HealthDataFlutterApiCodec: FlutterStandardMessageCodec {
 /// Generated protocol from Pigeon that represents Flutter messages that can be called from Swift.
 protocol HealthDataFlutterApiProtocol {
   func onHeartRateAdded(data dataArg: TimeSeriesData, completion: @escaping (Result<Void, FlutterError>) -> Void)
-  func onStepsAdded(data dataArg: TimeSeriesData, completion: @escaping (Result<Void, FlutterError>) -> Void)
-  func onFirmwareStatusUpdate(data dataArg: FirmwareStatusResponse, completion: @escaping (Result<Void, FlutterError>) -> Void)
 }
 class HealthDataFlutterApi: HealthDataFlutterApiProtocol {
   private let binaryMessenger: FlutterBinaryMessenger
@@ -222,42 +187,6 @@ class HealthDataFlutterApi: HealthDataFlutterApiProtocol {
   }
   func onHeartRateAdded(data dataArg: TimeSeriesData, completion: @escaping (Result<Void, FlutterError>) -> Void) {
     let channelName: String = "dev.flutter.pigeon.pigeon_poc.HealthDataFlutterApi.onHeartRateAdded"
-    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
-    channel.sendMessage([dataArg] as [Any?]) { response in
-      guard let listResponse = response as? [Any?] else {
-        completion(.failure(createConnectionError(withChannelName: channelName)))
-        return
-      }
-      if listResponse.count > 1 {
-        let code: String = listResponse[0] as! String
-        let message: String? = nilOrValue(listResponse[1])
-        let details: String? = nilOrValue(listResponse[2])
-        completion(.failure(FlutterError(code: code, message: message, details: details)))
-      } else {
-        completion(.success(Void()))
-      }
-    }
-  }
-  func onStepsAdded(data dataArg: TimeSeriesData, completion: @escaping (Result<Void, FlutterError>) -> Void) {
-    let channelName: String = "dev.flutter.pigeon.pigeon_poc.HealthDataFlutterApi.onStepsAdded"
-    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
-    channel.sendMessage([dataArg] as [Any?]) { response in
-      guard let listResponse = response as? [Any?] else {
-        completion(.failure(createConnectionError(withChannelName: channelName)))
-        return
-      }
-      if listResponse.count > 1 {
-        let code: String = listResponse[0] as! String
-        let message: String? = nilOrValue(listResponse[1])
-        let details: String? = nilOrValue(listResponse[2])
-        completion(.failure(FlutterError(code: code, message: message, details: details)))
-      } else {
-        completion(.success(Void()))
-      }
-    }
-  }
-  func onFirmwareStatusUpdate(data dataArg: FirmwareStatusResponse, completion: @escaping (Result<Void, FlutterError>) -> Void) {
-    let channelName: String = "dev.flutter.pigeon.pigeon_poc.HealthDataFlutterApi.onFirmwareStatusUpdate"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
     channel.sendMessage([dataArg] as [Any?]) { response in
       guard let listResponse = response as? [Any?] else {

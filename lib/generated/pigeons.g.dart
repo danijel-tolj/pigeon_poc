@@ -30,12 +30,6 @@ enum DeviceType {
   ouras,
 }
 
-enum FirmwareUpdateStatus {
-  updating,
-  error,
-  done,
-}
-
 class TimeSeriesData {
   TimeSeriesData({
     required this.timestamp,
@@ -58,32 +52,6 @@ class TimeSeriesData {
     return TimeSeriesData(
       timestamp: result[0]! as int,
       data: result[1]! as int,
-    );
-  }
-}
-
-class FirmwareStatusResponse {
-  FirmwareStatusResponse({
-    required this.status,
-    required this.value,
-  });
-
-  FirmwareUpdateStatus status;
-
-  String value;
-
-  Object encode() {
-    return <Object?>[
-      status.index,
-      value,
-    ];
-  }
-
-  static FirmwareStatusResponse decode(Object result) {
-    result as List<Object?>;
-    return FirmwareStatusResponse(
-      status: FirmwareUpdateStatus.values[result[0]! as int],
-      value: result[1]! as String,
     );
   }
 }
@@ -148,11 +116,8 @@ class _HealthDataFlutterApiCodec extends StandardMessageCodec {
   const _HealthDataFlutterApiCodec();
   @override
   void writeValue(WriteBuffer buffer, Object? value) {
-    if (value is FirmwareStatusResponse) {
+    if (value is TimeSeriesData) {
       buffer.putUint8(128);
-      writeValue(buffer, value.encode());
-    } else if (value is TimeSeriesData) {
-      buffer.putUint8(129);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -163,8 +128,6 @@ class _HealthDataFlutterApiCodec extends StandardMessageCodec {
   Object? readValueOfType(int type, ReadBuffer buffer) {
     switch (type) {
       case 128: 
-        return FirmwareStatusResponse.decode(readValue(buffer)!);
-      case 129: 
         return TimeSeriesData.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -176,10 +139,6 @@ abstract class HealthDataFlutterApi {
   static const MessageCodec<Object?> pigeonChannelCodec = _HealthDataFlutterApiCodec();
 
   void onHeartRateAdded(TimeSeriesData data);
-
-  void onStepsAdded(TimeSeriesData data);
-
-  void onFirmwareStatusUpdate(FirmwareStatusResponse data);
 
   static void setup(HealthDataFlutterApi? api, {BinaryMessenger? binaryMessenger}) {
     {
@@ -198,56 +157,6 @@ abstract class HealthDataFlutterApi {
               'Argument for dev.flutter.pigeon.pigeon_poc.HealthDataFlutterApi.onHeartRateAdded was null, expected non-null TimeSeriesData.');
           try {
             api.onHeartRateAdded(arg_data!);
-            return wrapResponse(empty: true);
-          } on PlatformException catch (e) {
-            return wrapResponse(error: e);
-          }          catch (e) {
-            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
-          }
-        });
-      }
-    }
-    {
-      final BasicMessageChannel<Object?> __pigeon_channel = BasicMessageChannel<Object?>(
-          'dev.flutter.pigeon.pigeon_poc.HealthDataFlutterApi.onStepsAdded', pigeonChannelCodec,
-          binaryMessenger: binaryMessenger);
-      if (api == null) {
-        __pigeon_channel.setMessageHandler(null);
-      } else {
-        __pigeon_channel.setMessageHandler((Object? message) async {
-          assert(message != null,
-          'Argument for dev.flutter.pigeon.pigeon_poc.HealthDataFlutterApi.onStepsAdded was null.');
-          final List<Object?> args = (message as List<Object?>?)!;
-          final TimeSeriesData? arg_data = (args[0] as TimeSeriesData?);
-          assert(arg_data != null,
-              'Argument for dev.flutter.pigeon.pigeon_poc.HealthDataFlutterApi.onStepsAdded was null, expected non-null TimeSeriesData.');
-          try {
-            api.onStepsAdded(arg_data!);
-            return wrapResponse(empty: true);
-          } on PlatformException catch (e) {
-            return wrapResponse(error: e);
-          }          catch (e) {
-            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
-          }
-        });
-      }
-    }
-    {
-      final BasicMessageChannel<Object?> __pigeon_channel = BasicMessageChannel<Object?>(
-          'dev.flutter.pigeon.pigeon_poc.HealthDataFlutterApi.onFirmwareStatusUpdate', pigeonChannelCodec,
-          binaryMessenger: binaryMessenger);
-      if (api == null) {
-        __pigeon_channel.setMessageHandler(null);
-      } else {
-        __pigeon_channel.setMessageHandler((Object? message) async {
-          assert(message != null,
-          'Argument for dev.flutter.pigeon.pigeon_poc.HealthDataFlutterApi.onFirmwareStatusUpdate was null.');
-          final List<Object?> args = (message as List<Object?>?)!;
-          final FirmwareStatusResponse? arg_data = (args[0] as FirmwareStatusResponse?);
-          assert(arg_data != null,
-              'Argument for dev.flutter.pigeon.pigeon_poc.HealthDataFlutterApi.onFirmwareStatusUpdate was null, expected non-null FirmwareStatusResponse.');
-          try {
-            api.onFirmwareStatusUpdate(arg_data!);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);

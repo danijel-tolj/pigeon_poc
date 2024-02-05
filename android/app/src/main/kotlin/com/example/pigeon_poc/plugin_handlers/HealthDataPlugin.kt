@@ -1,7 +1,5 @@
 package com.example.pigeon_poc.plugin_handlers
 
-import FirmwareStatusResponse
-import FirmwareUpdateStatus
 import HealthDataFlutterApi
 import HealthDataHostApi
 import TimeSeriesData
@@ -22,15 +20,8 @@ class HealthDataPlugin(binaryMessenger: BinaryMessenger) : HealthDataHostApi {
         override fun run() {
             // Use Handler to execute UI-related task on the main thread
             handler.post {
-                // Your UI-related task logic here
-                val enum = FirmwareUpdateStatus.values()[Random.nextInt(0,3)]
-
-                _flutterApi.onFirmwareStatusUpdate(FirmwareStatusResponse(enum,"neki tekst")){}
-
                 _flutterApi.onHeartRateAdded(TimeSeriesData(Instant.now().toEpochMilli(), Random.nextInt(60, 70 + 1).toLong()
-                )) {
-                    // Callback logic
-                }
+                )) {}
             }
         }
     }

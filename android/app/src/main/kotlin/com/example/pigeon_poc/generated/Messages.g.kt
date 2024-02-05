@@ -56,18 +56,6 @@ enum class DeviceType(val raw: Int) {
   }
 }
 
-enum class FirmwareUpdateStatus(val raw: Int) {
-  UPDATING(0),
-  ERROR(1),
-  DONE(2);
-
-  companion object {
-    fun ofRaw(raw: Int): FirmwareUpdateStatus? {
-      return values().firstOrNull { it.raw == raw }
-    }
-  }
-}
-
 /** Generated class from Pigeon that represents data sent in messages. */
 data class TimeSeriesData (
   val timestamp: Long,
@@ -86,28 +74,6 @@ data class TimeSeriesData (
     return listOf<Any?>(
       timestamp,
       data,
-    )
-  }
-}
-
-/** Generated class from Pigeon that represents data sent in messages. */
-data class FirmwareStatusResponse (
-  val status: FirmwareUpdateStatus,
-  val value: String
-
-) {
-  companion object {
-    @Suppress("UNCHECKED_CAST")
-    fun fromList(list: List<Any?>): FirmwareStatusResponse {
-      val status = FirmwareUpdateStatus.ofRaw(list[0] as Int)!!
-      val value = list[1] as String
-      return FirmwareStatusResponse(status, value)
-    }
-  }
-  fun toList(): List<Any?> {
-    return listOf<Any?>(
-      status.raw,
-      value,
     )
   }
 }
@@ -177,11 +143,6 @@ private object HealthDataFlutterApiCodec : StandardMessageCodec() {
     return when (type) {
       128.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          FirmwareStatusResponse.fromList(it)
-        }
-      }
-      129.toByte() -> {
-        return (readValue(buffer) as? List<Any?>)?.let {
           TimeSeriesData.fromList(it)
         }
       }
@@ -190,12 +151,8 @@ private object HealthDataFlutterApiCodec : StandardMessageCodec() {
   }
   override fun writeValue(stream: ByteArrayOutputStream, value: Any?)   {
     when (value) {
-      is FirmwareStatusResponse -> {
-        stream.write(128)
-        writeValue(stream, value.toList())
-      }
       is TimeSeriesData -> {
-        stream.write(129)
+        stream.write(128)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -215,38 +172,6 @@ class HealthDataFlutterApi(private val binaryMessenger: BinaryMessenger) {
   fun onHeartRateAdded(dataArg: TimeSeriesData, callback: (Result<Unit>) -> Unit)
 {
     val channelName = "dev.flutter.pigeon.pigeon_poc.HealthDataFlutterApi.onHeartRateAdded"
-    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-    channel.send(listOf(dataArg)) {
-      if (it is List<*>) {
-        if (it.size > 1) {
-          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
-        } else {
-          callback(Result.success(Unit))
-        }
-      } else {
-        callback(Result.failure(createConnectionError(channelName)))
-      } 
-    }
-  }
-  fun onStepsAdded(dataArg: TimeSeriesData, callback: (Result<Unit>) -> Unit)
-{
-    val channelName = "dev.flutter.pigeon.pigeon_poc.HealthDataFlutterApi.onStepsAdded"
-    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
-    channel.send(listOf(dataArg)) {
-      if (it is List<*>) {
-        if (it.size > 1) {
-          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
-        } else {
-          callback(Result.success(Unit))
-        }
-      } else {
-        callback(Result.failure(createConnectionError(channelName)))
-      } 
-    }
-  }
-  fun onFirmwareStatusUpdate(dataArg: FirmwareStatusResponse, callback: (Result<Unit>) -> Unit)
-{
-    val channelName = "dev.flutter.pigeon.pigeon_poc.HealthDataFlutterApi.onFirmwareStatusUpdate"
     val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
     channel.send(listOf(dataArg)) {
       if (it is List<*>) {

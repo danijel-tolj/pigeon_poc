@@ -18,15 +18,6 @@ class TimeSeriesData {
   TimeSeriesData({required this.timestamp, required this.data});
 }
 
-class FirmwareStatusResponse {
-  final FirmwareUpdateStatus status;
-  final String value;
-
-  FirmwareStatusResponse({required this.status, required this.value});
-}
-
-enum FirmwareUpdateStatus { updating, error, done }
-
 // Flutter -> Native
 @HostApi()
 abstract class HealthDataHostApi {
@@ -38,6 +29,4 @@ abstract class HealthDataHostApi {
 @FlutterApi()
 abstract class HealthDataFlutterApi {
   void onHeartRateAdded(TimeSeriesData data);
-  void onStepsAdded(TimeSeriesData data);
-  void onFirmwareStatusUpdate(FirmwareStatusResponse data);
 }
