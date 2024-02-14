@@ -25,14 +25,6 @@ List<Object?> wrapResponse({Object? result, PlatformException? error, bool empty
   return <Object?>[error.code, error.message, error.details];
 }
 
-enum Frequency {
-  second,
-  minute,
-  fifteenMinutes,
-  hour,
-  day,
-}
-
 enum BluetoothStatus {
   poweredOn,
   poweredOff,
@@ -131,7 +123,7 @@ class HealthDataHostApi {
 
   static const MessageCodec<Object?> pigeonChannelCodec = _HealthDataHostApiCodec();
 
-  Future<List<TimeSeriesData?>?> getHeartRate(int from, int to) async {
+  Future<List<TimeSeriesData?>> getHeartRate(int from, int to) async {
     const String __pigeon_channelName = 'dev.flutter.pigeon.pigeon_poc.HealthDataHostApi.getHeartRate';
     final BasicMessageChannel<Object?> __pigeon_channel = BasicMessageChannel<Object?>(
       __pigeon_channelName,
@@ -148,8 +140,13 @@ class HealthDataHostApi {
         message: __pigeon_replyList[1] as String?,
         details: __pigeon_replyList[2],
       );
+    } else if (__pigeon_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
     } else {
-      return (__pigeon_replyList[0] as List<Object?>?)?.cast<TimeSeriesData?>();
+      return (__pigeon_replyList[0] as List<Object?>?)!.cast<TimeSeriesData?>();
     }
   }
 

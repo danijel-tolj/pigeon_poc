@@ -9,11 +9,7 @@ import 'package:pigeon/pigeon.dart';
   dartPackageName: 'pigeon_poc',
 ))
 
-//enum DeviceType { appleWatch, googleFit }
-enum Frequency { second, minute, fifteenMinutes, hour, day }
-
 // data classes
-
 enum BluetoothStatus {
   poweredOn,
   poweredOff,
@@ -40,7 +36,7 @@ class StepsData {
 @HostApi()
 abstract class HealthDataHostApi {
   @async
-  List<TimeSeriesData>? getHeartRate(int from, int to);
+  List<TimeSeriesData> getHeartRate(int from, int to);
   @async
   List<StepsData> getSteps(int timestampFrom, int timestampTo);
 }

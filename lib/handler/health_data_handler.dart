@@ -28,11 +28,7 @@ class HealthDataHandler extends HealthDataFlutterApi {
         now.millisecondsSinceEpoch,
       );
 
-      if (response == null) {
-        return right([]);
-      } else {
-        return right(response.cast());
-      }
+      return right(response.cast());
     } on PlatformException catch (e) {
       return left(e);
     }

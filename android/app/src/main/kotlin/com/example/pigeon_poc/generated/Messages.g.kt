@@ -45,20 +45,6 @@ class FlutterError (
   val details: Any? = null
 ) : Throwable()
 
-enum class Frequency(val raw: Int) {
-  SECOND(0),
-  MINUTE(1),
-  FIFTEENMINUTES(2),
-  HOUR(3),
-  DAY(4);
-
-  companion object {
-    fun ofRaw(raw: Int): Frequency? {
-      return values().firstOrNull { it.raw == raw }
-    }
-  }
-}
-
 enum class BluetoothStatus(val raw: Int) {
   POWEREDON(0),
   POWEREDOFF(1),
@@ -151,7 +137,7 @@ private object HealthDataHostApiCodec : StandardMessageCodec() {
 
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface HealthDataHostApi {
-  fun getHeartRate(from: Long, to: Long, callback: (Result<List<TimeSeriesData>?>) -> Unit)
+  fun getHeartRate(from: Long, to: Long, callback: (Result<List<TimeSeriesData>>) -> Unit)
   fun getSteps(timestampFrom: Long, timestampTo: Long, callback: (Result<List<StepsData>>) -> Unit)
 
   companion object {
@@ -169,7 +155,7 @@ interface HealthDataHostApi {
             val args = message as List<Any?>
             val fromArg = args[0].let { if (it is Int) it.toLong() else it as Long }
             val toArg = args[1].let { if (it is Int) it.toLong() else it as Long }
-            api.getHeartRate(fromArg, toArg) { result: Result<List<TimeSeriesData>?> ->
+            api.getHeartRate(fromArg, toArg) { result: Result<List<TimeSeriesData>> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(wrapError(error))

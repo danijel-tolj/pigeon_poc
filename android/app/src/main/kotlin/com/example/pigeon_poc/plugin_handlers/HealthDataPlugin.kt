@@ -39,11 +39,10 @@ class HealthDataPlugin(binaryMessenger: BinaryMessenger) : HealthDataHostApi {
         timer.cancel()
     }
 
-
     override fun getHeartRate(
         from: Long,
         to: Long,
-        callback: (Result<List<TimeSeriesData>?>) -> Unit
+        callback: (Result<List<TimeSeriesData>>) -> Unit
     ) {
         // you can use the parameters passed from flutter method call here
         val from = Instant.ofEpochMilli(from)
@@ -67,6 +66,8 @@ class HealthDataPlugin(binaryMessenger: BinaryMessenger) : HealthDataHostApi {
         )
         callback(Result.success(data))
     }
+
+
 
     override fun getSteps(
         timestampFrom: Long,

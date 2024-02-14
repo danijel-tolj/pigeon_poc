@@ -1,6 +1,6 @@
 #!/bin/bash
 
-dart pub get 
+flutter pub get 
 
 echo "Generating pigeons..."
 dart run pigeon --input pigeons/pigeons.dart   

@@ -24,8 +24,8 @@ class BleScannerFlutterApiImpl(binaryMessenger: BinaryMessenger) : BluetoothStat
             BluetoothAdapter.STATE_ON -> BluetoothStatus.POWEREDON
             BluetoothAdapter.STATE_OFF -> BluetoothStatus.POWEREDOFF
             else -> null
-
         }
+
         if (status != null) {
             _flutterApi.onBluetoothStatusChanged(status) {}
         }

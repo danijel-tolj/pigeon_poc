@@ -38,7 +38,7 @@ class HealthDataPlugin: HealthDataHostApi {
         timer = nil
     }
     
-    func getHeartRate(from: Int64, to: Int64, completion: @escaping (Result<[TimeSeriesData]?, Error>) -> Void) {
+    func getHeartRate(from: Int64, to: Int64, completion: @escaping (Result<[TimeSeriesData], Error>) -> Void) {
         // you can use the parameters passed from flutter method call here
         //let fromDate = Date(timeIntervalSince1970: TimeInterval(from) / 1000)
         //let toDate = Date(timeIntervalSince1970: TimeInterval(to) / 1000)

@@ -43,14 +43,6 @@ private func nilOrValue<T>(_ value: Any?) -> T? {
   return value as! T?
 }
 
-enum Frequency: Int {
-  case second = 0
-  case minute = 1
-  case fifteenMinutes = 2
-  case hour = 3
-  case day = 4
-}
-
 enum BluetoothStatus: Int {
   case poweredOn = 0
   case poweredOff = 1
@@ -146,7 +138,7 @@ class HealthDataHostApiCodec: FlutterStandardMessageCodec {
 
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
 protocol HealthDataHostApi {
-  func getHeartRate(from: Int64, to: Int64, completion: @escaping (Result<[TimeSeriesData]?, Error>) -> Void)
+  func getHeartRate(from: Int64, to: Int64, completion: @escaping (Result<[TimeSeriesData], Error>) -> Void)
   func getSteps(timestampFrom: Int64, timestampTo: Int64, completion: @escaping (Result<[StepsData], Error>) -> Void)
 }
 
