@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pigeon_poc/cubit/bluetooth_status_broadcast/bluetooth_status_broadcast_cubit.dart';
 import 'package:pigeon_poc/cubit/heart_rate/heart_rate_cubit.dart';
 import 'package:pigeon_poc/cubit/heart_rate_broadcast/heart_rate_broadcast_cubit.dart';
 import 'package:pigeon_poc/generated/pigeons.g.dart';
+import 'package:pigeon_poc/handler/ble_status_handler.dart';
 import 'package:pigeon_poc/handler/health_data_handler.dart';
 
 void main() {
@@ -37,14 +39,26 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    return RepositoryProvider<HealthDataHandler>(
-      create: (context) => HealthDataHandler(hostApi: HealthDataHostApi()),
+    return MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider<HealthDataHandler>(
+          create: (context) => HealthDataHandler(hostApi: HealthDataHostApi()),
+        ),
+        RepositoryProvider<BleStatusHandler>(
+          create: (context) => BleStatusHandler(),
+        ),
+      ],
       child: MultiBlocProvider(
         providers: [
           BlocProvider(
             create: (context) => HeartRateCubit(
               context.read<HealthDataHandler>(),
             ),
+          ),
+          BlocProvider(
+            create: (context) => BluetoothStatusBroadcastCubit(
+              context.read<BleStatusHandler>(),
+            )..init(),
           ),
           BlocProvider(
             create: (context) => HeartRateBroadcastCubit(
@@ -63,6 +77,7 @@ class _MyHomePageState extends State<MyHomePage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _HeartRateBroadcast(),
+                _BluetoothStateBroadcast(),
                 Expanded(child: _HeartRateData()),
               ],
             ),
@@ -121,6 +136,32 @@ class _HeartRateBroadcast extends StatelessWidget {
         } else {
           return Text(
             'Broadcast HR data : ${state.record.value}',
+            textAlign: TextAlign.center,
+          );
+        }
+      },
+    );
+  }
+}
+
+class _BluetoothStateBroadcast extends StatelessWidget {
+  const _BluetoothStateBroadcast();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<BluetoothStatusBroadcastCubit, BluetoothStatusBroadcastState>(
+      builder: (context, state) {
+        if (state is BluetoothStatusBroadcastWaitingStatuses) {
+          return const Text(
+            'Waiting for bluetooth status change',
+            textAlign: TextAlign.center,
+          );
+        }
+        if (state is! BluetoothStatusBroadcastData) {
+          return const SizedBox();
+        } else {
+          return Text(
+            'Bluetooth Status : ${state.status.name}',
             textAlign: TextAlign.center,
           );
         }

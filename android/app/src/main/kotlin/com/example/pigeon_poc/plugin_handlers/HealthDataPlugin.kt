@@ -2,6 +2,7 @@ package com.example.pigeon_poc.plugin_handlers
 
 import HealthDataFlutterApi
 import HealthDataHostApi
+import StepsData
 import TimeSeriesData
 import android.os.Looper
 import io.flutter.plugin.common.BinaryMessenger
@@ -20,17 +21,21 @@ class HealthDataPlugin(binaryMessenger: BinaryMessenger) : HealthDataHostApi {
         override fun run() {
             // Use Handler to execute UI-related task on the main thread
             handler.post {
-                _flutterApi.onHeartRateAdded(TimeSeriesData(Instant.now().toEpochMilli(), Random.nextInt(60, 70 + 1).toLong()
-                )) {}
+                _flutterApi.onHeartRateAdded(
+                    TimeSeriesData(
+                        Instant.now().toEpochMilli(), Random.nextInt(60, 70 + 1).toLong()
+                    )
+                ) {}
             }
         }
     }
-    init {
-       HealthDataHostApi.setUp(binaryMessenger,this)
-        timer.scheduleAtFixedRate(task, 0, 1000)
-   }
 
-    fun dispose(){
+    init {
+        HealthDataHostApi.setUp(binaryMessenger, this)
+        timer.scheduleAtFixedRate(task, 0, 1000)
+    }
+
+    fun dispose() {
         timer.cancel()
     }
 
@@ -47,11 +52,28 @@ class HealthDataPlugin(binaryMessenger: BinaryMessenger) : HealthDataHostApi {
 
         // Fetch some health data
         val data = listOf(
-            TimeSeriesData(timestamp = Instant.now().toEpochMilli()+1000, data = Random.nextInt(60,70,).toLong()),
-            TimeSeriesData(timestamp = Instant.now().toEpochMilli()+2000,  data = Random.nextInt(60,70,).toLong()),
-            TimeSeriesData(timestamp = Instant.now().toEpochMilli()+3000,  data = Random.nextInt(60,70,).toLong())
+            TimeSeriesData(
+                timestamp = Instant.now().toEpochMilli() + 1000,
+                data = Random.nextInt(60, 70).toLong()
+            ),
+            TimeSeriesData(
+                timestamp = Instant.now().toEpochMilli() + 2000,
+                data = Random.nextInt(60, 70).toLong()
+            ),
+            TimeSeriesData(
+                timestamp = Instant.now().toEpochMilli() + 3000,
+                data = Random.nextInt(60, 70).toLong()
+            )
         )
         callback(Result.success(data))
+    }
+
+    override fun getSteps(
+        timestampFrom: Long,
+        timestampTo: Long,
+        callback: (Result<List<StepsData>>) -> Unit
+    ) {
+        TODO("Not yet implemented")
     }
 
 }

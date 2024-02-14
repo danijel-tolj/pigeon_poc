@@ -43,9 +43,20 @@ private func nilOrValue<T>(_ value: Any?) -> T? {
   return value as! T?
 }
 
-enum DeviceType: Int {
-  case appleWatch = 0
-  case ouras = 1
+enum Frequency: Int {
+  case second = 0
+  case minute = 1
+  case fifteenMinutes = 2
+  case hour = 3
+  case day = 4
+}
+
+enum BluetoothStatus: Int {
+  case poweredOn = 0
+  case poweredOff = 1
+  case resetting = 2
+  case unauthorized = 3
+  case notSupported = 4
 }
 
 /// Generated class from Pigeon that represents data sent in messages.
@@ -70,10 +81,34 @@ struct TimeSeriesData {
   }
 }
 
+/// Generated class from Pigeon that represents data sent in messages.
+struct StepsData {
+  var timestamp: Int64
+  var data: Int64
+
+  static func fromList(_ list: [Any?]) -> StepsData? {
+    let timestamp = list[0] is Int64 ? list[0] as! Int64 : Int64(list[0] as! Int32)
+    let data = list[1] is Int64 ? list[1] as! Int64 : Int64(list[1] as! Int32)
+
+    return StepsData(
+      timestamp: timestamp,
+      data: data
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      timestamp,
+      data,
+    ]
+  }
+}
+
 private class HealthDataHostApiCodecReader: FlutterStandardReader {
   override func readValue(ofType type: UInt8) -> Any? {
     switch type {
     case 128:
+      return StepsData.fromList(self.readValue() as! [Any?])
+    case 129:
       return TimeSeriesData.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
@@ -83,8 +118,11 @@ private class HealthDataHostApiCodecReader: FlutterStandardReader {
 
 private class HealthDataHostApiCodecWriter: FlutterStandardWriter {
   override func writeValue(_ value: Any) {
-    if let value = value as? TimeSeriesData {
+    if let value = value as? StepsData {
       super.writeByte(128)
+      super.writeValue(value.toList())
+    } else if let value = value as? TimeSeriesData {
+      super.writeByte(129)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)
@@ -109,6 +147,7 @@ class HealthDataHostApiCodec: FlutterStandardMessageCodec {
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
 protocol HealthDataHostApi {
   func getHeartRate(from: Int64, to: Int64, completion: @escaping (Result<[TimeSeriesData]?, Error>) -> Void)
+  func getSteps(timestampFrom: Int64, timestampTo: Int64, completion: @escaping (Result<[StepsData], Error>) -> Void)
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -134,6 +173,24 @@ class HealthDataHostApiSetup {
       }
     } else {
       getHeartRateChannel.setMessageHandler(nil)
+    }
+    let getStepsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.pigeon_poc.HealthDataHostApi.getSteps", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      getStepsChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let timestampFromArg = args[0] is Int64 ? args[0] as! Int64 : Int64(args[0] as! Int32)
+        let timestampToArg = args[1] is Int64 ? args[1] as! Int64 : Int64(args[1] as! Int32)
+        api.getSteps(timestampFrom: timestampFromArg, timestampTo: timestampToArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      getStepsChannel.setMessageHandler(nil)
     }
   }
 }
@@ -189,6 +246,34 @@ class HealthDataFlutterApi: HealthDataFlutterApiProtocol {
     let channelName: String = "dev.flutter.pigeon.pigeon_poc.HealthDataFlutterApi.onHeartRateAdded"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
     channel.sendMessage([dataArg] as [Any?]) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
+      }
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(FlutterError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(Void()))
+      }
+    }
+  }
+}
+/// Generated protocol from Pigeon that represents Flutter messages that can be called from Swift.
+protocol BleScannerFlutterApiProtocol {
+  func onBluetoothStatusChanged(status statusArg: BluetoothStatus, completion: @escaping (Result<Void, FlutterError>) -> Void)
+}
+class BleScannerFlutterApi: BleScannerFlutterApiProtocol {
+  private let binaryMessenger: FlutterBinaryMessenger
+  init(binaryMessenger: FlutterBinaryMessenger) {
+    self.binaryMessenger = binaryMessenger
+  }
+  func onBluetoothStatusChanged(status statusArg: BluetoothStatus, completion: @escaping (Result<Void, FlutterError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.pigeon_poc.BleScannerFlutterApi.onBluetoothStatusChanged"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger)
+    channel.sendMessage([statusArg.rawValue] as [Any?]) { response in
       guard let listResponse = response as? [Any?] else {
         completion(.failure(createConnectionError(withChannelName: channelName)))
         return

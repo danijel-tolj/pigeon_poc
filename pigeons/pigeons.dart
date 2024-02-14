@@ -8,9 +8,20 @@ import 'package:pigeon/pigeon.dart';
   swiftOptions: SwiftOptions(),
   dartPackageName: 'pigeon_poc',
 ))
-enum DeviceType { appleWatch, ouras }
+
+//enum DeviceType { appleWatch, googleFit }
+enum Frequency { second, minute, fifteenMinutes, hour, day }
 
 // data classes
+
+enum BluetoothStatus {
+  poweredOn,
+  poweredOff,
+  resetting,
+  unauthorized,
+  notSupported,
+}
+
 class TimeSeriesData {
   final int timestamp;
   final int data;
@@ -18,15 +29,29 @@ class TimeSeriesData {
   TimeSeriesData({required this.timestamp, required this.data});
 }
 
+class StepsData {
+  final int timestamp;
+  final int data;
+
+  StepsData({required this.timestamp, required this.data});
+}
+
 // Flutter -> Native
 @HostApi()
 abstract class HealthDataHostApi {
   @async
   List<TimeSeriesData>? getHeartRate(int from, int to);
+  @async
+  List<StepsData> getSteps(int timestampFrom, int timestampTo);
 }
 
 // Native -> Flutter
 @FlutterApi()
 abstract class HealthDataFlutterApi {
   void onHeartRateAdded(TimeSeriesData data);
+}
+
+@FlutterApi()
+abstract class BleScannerFlutterApi {
+  void onBluetoothStatusChanged(BluetoothStatus status);
 }

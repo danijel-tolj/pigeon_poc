@@ -45,5 +45,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>App app uses Bluetooth for connecting with your smart trainer and/or heart-rate monitor and performs 3D visualization display based on this data.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>App app uses Bluetooth for connecting with your smart trainer and/or heart-rate monitor and performs 3D visualization display based on this data.</string>
 </dict>
 </plist>

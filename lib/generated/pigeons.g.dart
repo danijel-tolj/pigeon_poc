@@ -25,9 +25,20 @@ List<Object?> wrapResponse({Object? result, PlatformException? error, bool empty
   return <Object?>[error.code, error.message, error.details];
 }
 
-enum DeviceType {
-  appleWatch,
-  ouras,
+enum Frequency {
+  second,
+  minute,
+  fifteenMinutes,
+  hour,
+  day,
+}
+
+enum BluetoothStatus {
+  poweredOn,
+  poweredOff,
+  resetting,
+  unauthorized,
+  notSupported,
 }
 
 class TimeSeriesData {
@@ -56,12 +67,41 @@ class TimeSeriesData {
   }
 }
 
+class StepsData {
+  StepsData({
+    required this.timestamp,
+    required this.data,
+  });
+
+  int timestamp;
+
+  int data;
+
+  Object encode() {
+    return <Object?>[
+      timestamp,
+      data,
+    ];
+  }
+
+  static StepsData decode(Object result) {
+    result as List<Object?>;
+    return StepsData(
+      timestamp: result[0]! as int,
+      data: result[1]! as int,
+    );
+  }
+}
+
 class _HealthDataHostApiCodec extends StandardMessageCodec {
   const _HealthDataHostApiCodec();
   @override
   void writeValue(WriteBuffer buffer, Object? value) {
-    if (value is TimeSeriesData) {
+    if (value is StepsData) {
       buffer.putUint8(128);
+      writeValue(buffer, value.encode());
+    } else if (value is TimeSeriesData) {
+      buffer.putUint8(129);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -72,6 +112,8 @@ class _HealthDataHostApiCodec extends StandardMessageCodec {
   Object? readValueOfType(int type, ReadBuffer buffer) {
     switch (type) {
       case 128: 
+        return StepsData.decode(readValue(buffer)!);
+      case 129: 
         return TimeSeriesData.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -108,6 +150,33 @@ class HealthDataHostApi {
       );
     } else {
       return (__pigeon_replyList[0] as List<Object?>?)?.cast<TimeSeriesData?>();
+    }
+  }
+
+  Future<List<StepsData?>> getSteps(int timestampFrom, int timestampTo) async {
+    const String __pigeon_channelName = 'dev.flutter.pigeon.pigeon_poc.HealthDataHostApi.getSteps';
+    final BasicMessageChannel<Object?> __pigeon_channel = BasicMessageChannel<Object?>(
+      __pigeon_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: __pigeon_binaryMessenger,
+    );
+    final List<Object?>? __pigeon_replyList =
+        await __pigeon_channel.send(<Object?>[timestampFrom, timestampTo]) as List<Object?>?;
+    if (__pigeon_replyList == null) {
+      throw _createConnectionError(__pigeon_channelName);
+    } else if (__pigeon_replyList.length > 1) {
+      throw PlatformException(
+        code: __pigeon_replyList[0]! as String,
+        message: __pigeon_replyList[1] as String?,
+        details: __pigeon_replyList[2],
+      );
+    } else if (__pigeon_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
+    } else {
+      return (__pigeon_replyList[0] as List<Object?>?)!.cast<StepsData?>();
     }
   }
 }
@@ -157,6 +226,40 @@ abstract class HealthDataFlutterApi {
               'Argument for dev.flutter.pigeon.pigeon_poc.HealthDataFlutterApi.onHeartRateAdded was null, expected non-null TimeSeriesData.');
           try {
             api.onHeartRateAdded(arg_data!);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
+    }
+  }
+}
+
+abstract class BleScannerFlutterApi {
+  static const MessageCodec<Object?> pigeonChannelCodec = StandardMessageCodec();
+
+  void onBluetoothStatusChanged(BluetoothStatus status);
+
+  static void setup(BleScannerFlutterApi? api, {BinaryMessenger? binaryMessenger}) {
+    {
+      final BasicMessageChannel<Object?> __pigeon_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.pigeon_poc.BleScannerFlutterApi.onBluetoothStatusChanged', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        __pigeon_channel.setMessageHandler(null);
+      } else {
+        __pigeon_channel.setMessageHandler((Object? message) async {
+          assert(message != null,
+          'Argument for dev.flutter.pigeon.pigeon_poc.BleScannerFlutterApi.onBluetoothStatusChanged was null.');
+          final List<Object?> args = (message as List<Object?>?)!;
+          final BluetoothStatus? arg_status = args[0] == null ? null : BluetoothStatus.values[args[0]! as int];
+          assert(arg_status != null,
+              'Argument for dev.flutter.pigeon.pigeon_poc.BleScannerFlutterApi.onBluetoothStatusChanged was null, expected non-null BluetoothStatus.');
+          try {
+            api.onBluetoothStatusChanged(arg_status!);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);

@@ -45,12 +45,29 @@ class FlutterError (
   val details: Any? = null
 ) : Throwable()
 
-enum class DeviceType(val raw: Int) {
-  APPLEWATCH(0),
-  OURAS(1);
+enum class Frequency(val raw: Int) {
+  SECOND(0),
+  MINUTE(1),
+  FIFTEENMINUTES(2),
+  HOUR(3),
+  DAY(4);
 
   companion object {
-    fun ofRaw(raw: Int): DeviceType? {
+    fun ofRaw(raw: Int): Frequency? {
+      return values().firstOrNull { it.raw == raw }
+    }
+  }
+}
+
+enum class BluetoothStatus(val raw: Int) {
+  POWEREDON(0),
+  POWEREDOFF(1),
+  RESETTING(2),
+  UNAUTHORIZED(3),
+  NOTSUPPORTED(4);
+
+  companion object {
+    fun ofRaw(raw: Int): BluetoothStatus? {
       return values().firstOrNull { it.raw == raw }
     }
   }
@@ -78,11 +95,38 @@ data class TimeSeriesData (
   }
 }
 
+/** Generated class from Pigeon that represents data sent in messages. */
+data class StepsData (
+  val timestamp: Long,
+  val data: Long
+
+) {
+  companion object {
+    @Suppress("UNCHECKED_CAST")
+    fun fromList(list: List<Any?>): StepsData {
+      val timestamp = list[0].let { if (it is Int) it.toLong() else it as Long }
+      val data = list[1].let { if (it is Int) it.toLong() else it as Long }
+      return StepsData(timestamp, data)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf<Any?>(
+      timestamp,
+      data,
+    )
+  }
+}
+
 @Suppress("UNCHECKED_CAST")
 private object HealthDataHostApiCodec : StandardMessageCodec() {
   override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
     return when (type) {
       128.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          StepsData.fromList(it)
+        }
+      }
+      129.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           TimeSeriesData.fromList(it)
         }
@@ -92,8 +136,12 @@ private object HealthDataHostApiCodec : StandardMessageCodec() {
   }
   override fun writeValue(stream: ByteArrayOutputStream, value: Any?)   {
     when (value) {
-      is TimeSeriesData -> {
+      is StepsData -> {
         stream.write(128)
+        writeValue(stream, value.toList())
+      }
+      is TimeSeriesData -> {
+        stream.write(129)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -104,6 +152,7 @@ private object HealthDataHostApiCodec : StandardMessageCodec() {
 /** Generated interface from Pigeon that represents a handler of messages from Flutter. */
 interface HealthDataHostApi {
   fun getHeartRate(from: Long, to: Long, callback: (Result<List<TimeSeriesData>?>) -> Unit)
+  fun getSteps(timestampFrom: Long, timestampTo: Long, callback: (Result<List<StepsData>>) -> Unit)
 
   companion object {
     /** The codec used by HealthDataHostApi. */
@@ -121,6 +170,27 @@ interface HealthDataHostApi {
             val fromArg = args[0].let { if (it is Int) it.toLong() else it as Long }
             val toArg = args[1].let { if (it is Int) it.toLong() else it as Long }
             api.getHeartRate(fromArg, toArg) { result: Result<List<TimeSeriesData>?> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pigeon_poc.HealthDataHostApi.getSteps", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val timestampFromArg = args[0].let { if (it is Int) it.toLong() else it as Long }
+            val timestampToArg = args[1].let { if (it is Int) it.toLong() else it as Long }
+            api.getSteps(timestampFromArg, timestampToArg) { result: Result<List<StepsData>> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(wrapError(error))
@@ -174,6 +244,32 @@ class HealthDataFlutterApi(private val binaryMessenger: BinaryMessenger) {
     val channelName = "dev.flutter.pigeon.pigeon_poc.HealthDataFlutterApi.onHeartRateAdded"
     val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
     channel.send(listOf(dataArg)) {
+      if (it is List<*>) {
+        if (it.size > 1) {
+          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else {
+          callback(Result.success(Unit))
+        }
+      } else {
+        callback(Result.failure(createConnectionError(channelName)))
+      } 
+    }
+  }
+}
+/** Generated class from Pigeon that represents Flutter messages that can be called from Kotlin. */
+@Suppress("UNCHECKED_CAST")
+class BleScannerFlutterApi(private val binaryMessenger: BinaryMessenger) {
+  companion object {
+    /** The codec used by BleScannerFlutterApi. */
+    val codec: MessageCodec<Any?> by lazy {
+      StandardMessageCodec()
+    }
+  }
+  fun onBluetoothStatusChanged(statusArg: BluetoothStatus, callback: (Result<Unit>) -> Unit)
+{
+    val channelName = "dev.flutter.pigeon.pigeon_poc.BleScannerFlutterApi.onBluetoothStatusChanged"
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+    channel.send(listOf(statusArg.raw)) {
       if (it is List<*>) {
         if (it.size > 1) {
           callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
